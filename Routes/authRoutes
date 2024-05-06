@@ -1,0 +1,56 @@
+const express = require('express');
+const router = express.Router();
+const db = require('../config/db');
+
+// Route pour la connexion
+router.post('/login', (req, res) => {
+  const { cin, mot_de_passe } = req.body;
+  if (!cin || !mot_de_passe) {
+    return res.status(400).json({ error: 'CIN and password are required' });
+  }
+
+  db.query('SELECT * FROM etudiants WHERE cin = ? AND mot_de_passe = ?', [cin, mot_de_passe], (err, results) => {
+    if (err) {
+      console.error('Error fetching student:', err);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+    if (results.length === 0) {
+      return res.status(404).json({ error: 'Student not found or incorrect password' });
+    }
+
+    const student = results[0];
+    res.json({ message: 'Authentication successful', student });
+  });
+});
+
+// Route pour l'inscription
+router.post('/register', (req, res) => {
+  const { nom, prenom, email, cin, mot_de_passe, groupeSpecialite } = req.body;
+  if (!nom || !prenom || !email || !cin || !mot_de_passe || !groupeSpecialite) {
+    return res.status(400).json({ error: 'All fields are required' });
+  }
+
+  // Vérifiez si l'étudiant avec le CIN fourni existe déjà
+  db.query('SELECT COUNT(*) AS count FROM etudiants WHERE cin = ?', [cin], (err, rows) => {
+    if (err) {
+      console.error('Error checking student existence:', err);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+    const count = rows[0].count;
+    if (count > 0) {
+      return res.status(400).json({ error: 'Student with the same CIN already exists' });
+    }
+
+    // Insérer le nouvel étudiant dans la base de données
+    db.query('INSERT INTO etudiants (nom, prenom, email, cin, mot_de_passe, groupeSpecialite) VALUES (?, ?, ?, ?, ?, ?)',
+      [nom, prenom, email, cin, mot_de_passe, groupeSpecialite], (err, result) => {
+        if (err) {
+          console.error('Error creating student:', err);
+          return res.status(500).json({ error: 'Internal server error' });
+        }
+        res.status(201).json({ message: 'Student created successfully', id: result.insertId });
+      });
+  });
+});
+
+module.exports = router;
