@@ -23,14 +23,12 @@ router.post('/login', (req, res) => {
   });
 });
 
-// Route pour l'inscription
 router.post('/register', (req, res) => {
-  const { nom, prenom, email, cin, mot_de_passe, groupeSpecialite } = req.body;
-  if (!nom || !prenom || !email || !cin || !mot_de_passe || !groupeSpecialite) {
+  const { nom, prenom, email, cin, mot_de_passe, telephone, departement } = req.body;
+  if (!nom || !prenom || !email || !cin || !mot_de_passe || !telephone || !departement) {
     return res.status(400).json({ error: 'All fields are required' });
   }
 
-  // Vérifiez si l'étudiant avec le CIN fourni existe déjà
   db.query('SELECT COUNT(*) AS count FROM etudiants WHERE cin = ?', [cin], (err, rows) => {
     if (err) {
       console.error('Error checking student existence:', err);
@@ -41,9 +39,8 @@ router.post('/register', (req, res) => {
       return res.status(400).json({ error: 'Student with the same CIN already exists' });
     }
 
-    // Insérer le nouvel étudiant dans la base de données
-    db.query('INSERT INTO etudiants (nom, prenom, email, cin, mot_de_passe, groupeSpecialite) VALUES (?, ?, ?, ?, ?, ?)',
-      [nom, prenom, email, cin, mot_de_passe, groupeSpecialite], (err, result) => {
+    db.query('INSERT INTO etudiants (nom, prenom, email, cin, mot_de_passe, telephone, departement) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [nom, prenom, email, cin, mot_de_passe, telephone, departement], (err, result) => {
         if (err) {
           console.error('Error creating student:', err);
           return res.status(500).json({ error: 'Internal server error' });
@@ -51,6 +48,27 @@ router.post('/register', (req, res) => {
         res.status(201).json({ message: 'Student created successfully', id: result.insertId });
       });
   });
+});
+
+// Route pour la mise à jour du profil
+router.put('/update-profile/:id', (req, res) => {
+  const id = req.params.id;
+  const { nom, prenom, email, cin, mot_de_passe, groupeSpecialite, telephone, departement } = req.body;
+
+  // Vérifiez que tous les champs sont présents
+  if (!nom || !prenom || !email || !cin || !mot_de_passe || !groupeSpecialite || !telephone || !departement) {
+    return res.status(400).json({ error: 'All fields are required' });
+  }
+
+  // Mettre à jour le profil de l'étudiant dans la base de données
+  db.query('UPDATE etudiants SET nom = ?, prenom = ?, email = ?, cin = ?, mot_de_passe = ?, groupeSpecialite = ?, telephone = ?, departement = ? WHERE id = ?',
+    [nom, prenom, email, cin, mot_de_passe, groupeSpecialite, telephone, departement, id], (err, result) => {
+      if (err) {
+        console.error('Error updating student profile:', err);
+        return res.status(500).json({ error: 'Internal server error' });
+      }
+      res.json({ message: 'Student profile updated successfully' });
+    });
 });
 
 module.exports = router;

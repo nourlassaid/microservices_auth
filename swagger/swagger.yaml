@@ -1,0 +1,68 @@
+openapi: 3.0.0
+info:
+  title: Micro1 Authentification API
+  version: 1.0.0
+  description: Documentation de l'API pour l'authentification des étudiants
+servers:
+  - url: http://localhost:3007/api
+paths:
+  /auth/login:
+    post:
+      summary: Authentifier un étudiant
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                cin:
+                  type: string
+                  example: "12345678"
+                mot_de_passe:
+                  type: string
+                  example: "password123"
+      responses:
+        '200':
+          description: Authentification réussie
+        '400':
+          description: CIN et mot de passe requis
+        '404':
+          description: Étudiant non trouvé ou mot de passe incorrect
+        '500':
+          description: Erreur interne du serveur
+  /auth/register:
+    post:
+      summary: Enregistrer un nouvel étudiant
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nom:
+                  type: string
+                  example: "Doe"
+                prenom:
+                  type: string
+                  example: "John"
+                email:
+                  type: string
+                  example: "john.doe@example.com"
+                cin:
+                  type: string
+                  example: "12345678"
+                mot_de_passe:
+                  type: string
+                  example: "password123"
+                groupeSpecialite:
+                  type: string
+                  example: "Informatique"
+      responses:
+        '201':
+          description: Étudiant créé avec succès
+        '400':
+          description: Tous les champs sont requis ou l'étudiant existe déjà
+        '500':
+          description: Erreur interne du serveur
