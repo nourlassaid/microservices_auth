@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-ms-deployment
+  namespace: my-namespace
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: auth-ms
+  template:
+    metadata:
+      labels:
+        app: auth-ms
+    spec:
+      containers:
+      - name: auth-ms
+        image: <your-app-image> # Replace with your actual image
+        ports:
+        - containerPort: 3002
+        env:
+        - name: MYSQL_HOST
+          value: "mysql-service"
+        - name: MYSQL_PORT
+          value: "3306"
+        - name: MYSQL_USER
+          value: "root"
+        - name: MYSQL_PASSWORD
+          value: "0000"
+        - name: MYSQL_DATABASE
+          value: "formation_management"
+        - name: JWT_SECRET
+          value: "ACCC009*"
+        - name: JWT_REFRESH_EXPIRATION
+          value: "1"

@@ -1,21 +1,13 @@
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-const authRouter = require('./routes/authRoutes');
+const authRouter = require('./routes/authRoutes'); // Correction ici
 const swaggerUi = require('swagger-ui-express');
 const YAML = require('yamljs');
 const swaggerDocument = YAML.load('./swagger/swagger.yaml');
 const app = express();
-
-
-
-
-
-
-const client = require('prom-client')
-
-
-
+const client = require('prom-client');
+const db = require('./db'); // Importez la connexion à la base de données MySQL
 
 
 // Enable Prometheus metrics collection
@@ -58,13 +50,10 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-app.use('/api/auth', authRouter);
+app.use('/api/auth', authRouter); // Correction ici
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
-
-
-
-const PORT = process.env.PORT || 3008;
+const PORT = process.env.PORT || 3002;
 const server = app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
