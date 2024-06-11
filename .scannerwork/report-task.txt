@@ -2,5 +2,5 @@ projectKey=microservice_auth
 serverUrl=http://localhost:9000
 serverVersion=10.5.1.90531
 dashboardUrl=http://localhost:9000/dashboard?id=microservice_auth
-ceTaskId=fb7e741e-5af5-4ea1-9228-ddb45c011310
-ceTaskUrl=http://localhost:9000/api/ce/task?id=fb7e741e-5af5-4ea1-9228-ddb45c011310
+ceTaskId=e5f62dbd-cf02-473e-a5d1-8d7b834305ec
+ceTaskUrl=http://localhost:9000/api/ce/task?id=e5f62dbd-cf02-473e-a5d1-8d7b834305ec

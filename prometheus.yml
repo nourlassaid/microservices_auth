@@ -3,7 +3,7 @@ global:
   evaluation_interval: 15s # Contrôle la fréquence à laquelle Prometheus évalue les règles d'alerte.
 
 scrape_configs:
-  - job_name: 'authentification_service' # Nom du job de récupération de métriques
+  - job_name: 'authentification' # Nom du job de récupération de métriques
     static_configs:
-      - targets: ['192.168.1.11:3008'] # L'adresse et le port de votre service
+      - targets: ['192.168.1.13:4002'] # L'adresse et le port de votre service
     metrics_path: /metrics # Chemin où les métriques sont exposées sur votre service

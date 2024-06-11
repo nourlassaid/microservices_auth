@@ -1,30 +1,30 @@
+
 # Stage 1: Build Node.js app
-FROM node:latest as build
+FROM node:20 as build
 
 WORKDIR /usr/src/app
 
-# Copy package.json and package-lock.json
 COPY package*.json ./
 
-# Install dependencies including node-pre-gyp
-RUN npm install && npm install node-pre-gyp
+RUN npm install
+
+COPY . .
+
+# Optionally, if your microservice requires any build step, perform it here
+# Example: RUN npm run build
 
 # Rebuild bcrypt module
 RUN npm rebuild bcrypt --build-from-source
 
-# Copy the rest of the application code
-COPY . .
-
-
 # Stage 2: Final image with only Node.js runtime
-FROM node:latest as final
+FROM node:20 as final
 
 WORKDIR /usr/src/app
 
 COPY --from=build /usr/src/app .
 
-# Expose port 3000 for Node.js application
-EXPOSE 3002
+# Expose port 3002 for Node.js application
+EXPOSE 4002
 
 # Start the Node.js application
 CMD ["node", "app.js"]
