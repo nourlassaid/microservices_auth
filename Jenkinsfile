@@ -43,7 +43,7 @@ stage('SonarQube Analysis') {
 }
 
         // Add your remaining stages here
-    }
+    
 
     post {
         success {
@@ -54,4 +54,4 @@ stage('SonarQube Analysis') {
             echo 'Build failed!'
         }
     }
-}
+
