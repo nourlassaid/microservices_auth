@@ -32,14 +32,7 @@ pipeline {
             }
         }
 
-        stage('SonarQube Analysis') {
-            steps {
-                // Exécuter l'analyse SonarQube
-                withSonarQubeEnv('sonarquabe') {
-                    bat '"%SONARQUBE_SCANNER_HOME%/bin/sonar-scanner.bat"'
-                }
-            }
-        }
+      
     }
 
     post {
