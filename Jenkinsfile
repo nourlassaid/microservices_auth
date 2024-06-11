@@ -2,12 +2,10 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = 'nour0/formationfrontend:latest'
-        SONARQUBE_SERVER = 'SonarQube' // Nom du serveur SonarQube configuré dans Jenkins
-        KUBECONFIG_CREDENTIALS_ID = 'kubeconfig' // ID des credentials pour K8s
-        DOCKER_PATH = "C:\\Program Files\\Docker\\cli-plugins"
-        NODEJS_PATH = "C:\\Program Files\\nodejs"
-        PATH = "${DOCKER_PATH};${NODEJS_PATH};${env.PATH}"  // Utilisez ';' pour Windows
+        NODEJS_HOME = tool name: 'NodeJS', type: 'jenkins.plugins.nodejs.tools.NodeJSInstallation'
+        PATH = "${env.NODEJS_HOME}/bin:${env.PATH}"
+        CHROME_BIN = '/usr/bin/google-chrome'
+        DOCKER_HUB_REGISTRY = 'docker.io'
     }
 
     stages {
@@ -26,67 +24,58 @@ pipeline {
             }
         }
 
+        stage('Build') {
+            steps {
+                bat 'npm run build'
+            }
+        }
+
         stage('SonarQube Analysis') {
             steps {
                 script {
-                    def scannerHome = tool name: 'SonarQube Scanner', type: 'hudson.plugins.sonar.SonarRunnerInstallation'
-                    withSonarQubeEnv('SonarQube') {
-                        bat "PATH=${scannerHome}/bin:${env.PATH} sonar-scanner"
+                    withSonarQubeEnv('SonarQube Test') {
+                        bat 'npm run sonarqube'
                     }
                 }
             }
         }
 
-        stage('Run Unit Tests') {
+        stage('Build Docker image') {
             steps {
                 script {
-                    bat 'npm test'
+                    bat 'docker build --no-cache -t formationfrontend:latest -f Dockerfile .'
+                    bat 'docker tag formationfrontend:latest nour0/formationfrontend:latest'
                 }
             }
         }
 
-        stage('Build Docker Image') {
-            steps {
-                script {
-                    bat 'docker build --no-cache -t nour0/formationfrontend:latest -f Dockerfile .'
-                }
-            }
-        }
-
-        stage('Push Docker Image') {
+        stage('Deploy Docker image') {
             steps {
                 script {
                     withCredentials([string(credentialsId: 'docker-hub-token', variable: 'DOCKER_TOKEN')]) {
-                        docker.withRegistry('https://index.docker.io/v1/', 'DOCKER_TOKEN') {
-                            bat "docker push nour0/formationfrontend:latest"
+                        docker.withRegistry('https://index.docker.io/v1/', '12') {
+                            bat "docker image push nour0/formationfrontend:latest"
                         }
                     }
                 }
             }
         }
-
-        stage('Deploy to Kubernetes') {
+        stage('kubernetes Deployment') {
             steps {
                 script {
-                    withKubeConfig([credentialsId: KUBECONFIG_CREDENTIALS_ID]) {
-                        bat 'kubectl apply -f auth-deployment.yaml/deployment.yaml'
-                    }
+                   bat 'kubectl apply -f auth-deployment.yaml' 
                 }
             }
         }
-
-       
     }
 
     post {
-        always {
-            cleanWs()
-        }
         success {
-            echo 'Pipeline completed successfully!'
+            echo 'Build succeeded!'
         }
+
         failure {
-            echo 'Pipeline failed!'
+            echo 'Build failed!'
         }
     }
 }
