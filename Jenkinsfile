@@ -2,84 +2,41 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_PATH = "C:\\Program Files\\Docker\\cli-plugins"
-        PATH = "${DOCKER_PATH};${NODEJS_PATH};${PATH}"  // Utilisez ';' pour Windows
-        NODEJS_PATH = "C:\\Program Files\\nodejs"  // Chemin d'accès correct à Node.js
+        DOCKER_PATH = "C:\\Programmes\\Docker\\cli-plugins"
+        PATH = "${DOCKER_PATH}:${PATH}"
+       
+        NODEJS_PATH = "C:\\Programmes (x86)\\nodejs"
+        SONAR_SCANNER_HOME = "C:\\Program Files\\sonar-scanner-5.0.1.3006-windows"
     }
 
     stages {
         stage('Checkout') {
             steps {
-                checkout scm
+                script {
+                    checkout scm
+                }
             }
         }
-
-        stage('Install dependencies') {
+        stage('Build and Rename Docker Image') {
             steps {
                 script {
+                    // Construire l'image Docker (ajustez la commande selon vos besoins)
+                    bat 'docker build -t nour0/formationfrontend:%BUILD_ID% .'
+                    // Installer les dépendances et exécuter les tests
                     bat 'npm install'
-                    bat 'npm install node-pre-gyp'
+
+                    // Renommer l'image Docker
+                    bat "docker tag nour0/formationfrontend:%BUILD_ID% nour0/formationfrontend:latest"
                 }
             }
         }
-
-        stage('Run Unit Tests') {
+        stage('SonarQube Analysis') {
             steps {
-                script {
-                    bat 'npm test'  // Exécutez vos tests unitaires
+                // Exécuter l'analyse SonarQube
+                withSonarQubeEnv('sonarquabe') {
+                    bat '"C:\Users\MSAR\Desktop\sonarqube-10.5.1.90531\bin\windows-x86-64 " -Dsonar.projectKey=microservice_auth'
                 }
             }
-        }
-
-        stage('Build') {
-            steps {
-                bat 'npm run build'
-            }
-        }
-
-        stage ('Scan and Build Jar File') {
-            steps {
-                withSonarQubeEnv(installationName: 'SonarQube ', credentialsId: 'SonarQubeToken') {
-                    sh 'mvn clean package sonar:sonar'
-                }
-            }
-        }
-
-        stage('Build Docker image') {
-            steps {
-                script {
-                    bat 'docker build --no-cache -t nour0/formationfrontend:latest -f Dockerfile .'
-                }
-            }
-        }
-
-        stage('Deploy Docker image') {
-            steps {
-                script {
-                    withCredentials([string(credentialsId: 'docker-hub-token', variable: 'DOCKER_TOKEN')]) {
-                        docker.withRegistry('https://index.docker.io/v1/', 'DOCKER_TOKEN') {
-                            bat "docker push nour0/formationfrontend:latest"
-                        }
-                    }
-                }
-            }
-        }
-
-        stage('Kubernetes Deployment') {
-            steps {
-                script {
-                    bat 'kubectl apply -f auth-deployment.yaml' 
-                }
-            }
-        }
-    }
-
-    post {
-        success {
-            echo 'Build succeeded!'
-        }
-        failure {
-            echo 'Build failed!'
         }
     }
 }
