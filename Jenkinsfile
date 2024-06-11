@@ -31,20 +31,15 @@ pipeline {
                 bat 'npm run build'
             }
         }
-
-        stage('SonarQube Analysis') {
-            steps {
-                script {
-                    withSonarQubeEnv('SonarQube Test') {
-                        bat """
-                        ${env.MSBUILD_SCANNER_HOME}/SonarScanner.MSBuild.exe begin /k:microservice_auth /d:sonar.login="${env.SONAR_TOKEN}" /d:sonar.host.url="${env.SONAR_HOST_URL}" /d:sonar.projectName="microservice_auth" /d:sonar.projectVersion="4.0" /d:sonar.sources="."
-                        msbuild your-solution.sln /t:Rebuild
-                        ${env.MSBUILD_SCANNER_HOME}/SonarScanner.MSBuild.exe end /d:sonar.login="${env.SONAR_TOKEN}"
-                        """
-                    }
-                }
+stage('SonarQube Analysis') {
+    steps {
+        script {
+            withSonarQubeEnv('SonarQubeScanner') {
+                // Perform SonarQube analysis steps here
             }
         }
+    }
+}
 
         // Add your remaining stages here
     }
