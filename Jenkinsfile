@@ -2,9 +2,12 @@ pipeline {
     agent any
 
     environment {
+        DOCKER_IMAGE = 'nour0/formationfrontend:latest'
+        SONARQUBE_SERVER = 'SonarQube' // Nom du serveur SonarQube configuré dans Jenkins
+        KUBECONFIG_CREDENTIALS_ID = 'kubeconfig' // ID des credentials pour K8s
         DOCKER_PATH = "C:\\Program Files\\Docker\\cli-plugins"
-        PATH = "${DOCKER_PATH};${NODEJS_PATH};${PATH}"  // Utilisez ';' pour Windows
-        NODEJS_PATH = "C:\\Program Files\\nodejs"  // Chemin d'accès correct à Node.js
+        NODEJS_PATH = "C:\\Program Files\\nodejs"
+        PATH = "${DOCKER_PATH};${NODEJS_PATH};${env.PATH}"  // Utilisez ';' pour Windows
     }
 
     stages {
@@ -23,23 +26,26 @@ pipeline {
             }
         }
 
-       
-
-        stage('Build') {
+        stage('SonarQube Analysis') {
             steps {
-                bat 'npm run build'
-            }
-        }
-
-        stage ('Scan and Build Jar File') {
-            steps {
-                withSonarQubeEnv(installationName: 'SonarQube ', credentialsId: 'SonarQubeToken') {
-                    sh 'mvn clean package sonar:sonar'
+                script {
+                    def scannerHome = tool 'SonarQube Scanner'
+                    withSonarQubeEnv('SonarQube') {
+                        bat 'npm run sonar'
+                    }
                 }
             }
         }
 
-        stage('Build Docker image') {
+        stage('Run Unit Tests') {
+            steps {
+                script {
+                    bat 'npm test'
+                }
+            }
+        }
+
+        stage('Build Docker Image') {
             steps {
                 script {
                     bat 'docker build --no-cache -t nour0/formationfrontend:latest -f Dockerfile .'
@@ -47,7 +53,7 @@ pipeline {
             }
         }
 
-        stage('Deploy Docker image') {
+        stage('Push Docker Image') {
             steps {
                 script {
                     withCredentials([string(credentialsId: 'docker-hub-token', variable: 'DOCKER_TOKEN')]) {
@@ -59,21 +65,28 @@ pipeline {
             }
         }
 
-        stage('Kubernetes Deployment') {
+        stage('Deploy to Kubernetes') {
             steps {
                 script {
-                    bat 'kubectl apply -f auth-deployment.yaml' 
+                    withKubeConfig([credentialsId: KUBECONFIG_CREDENTIALS_ID]) {
+                        bat 'kubectl apply -f auth-deployment.yaml/deployment.yaml'
+                    }
                 }
             }
         }
+
+       
     }
 
     post {
+        always {
+            cleanWs()
+        }
         success {
-            echo 'Build succeeded!'
+            echo 'Pipeline completed successfully!'
         }
         failure {
-            echo 'Build failed!'
+            echo 'Pipeline failed!'
         }
     }
 }
