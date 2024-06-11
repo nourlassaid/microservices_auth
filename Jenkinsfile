@@ -60,10 +60,11 @@ pipeline {
                 }
             }
         }
-        stage('kubernetes Deployment') {
+
+        stage('Kubernetes Deployment') {
             steps {
                 script {
-                   bat 'kubectl apply -f auth-deployment.yaml' 
+                    bat 'kubectl apply -f auth-deployment.yaml' 
                 }
             }
         }
