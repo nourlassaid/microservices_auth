@@ -6,6 +6,8 @@ pipeline {
         PATH = "${env.NODEJS_HOME}/bin:${env.PATH}"
         CHROME_BIN = '/usr/bin/google-chrome'
         DOCKER_HUB_REGISTRY = 'docker.io'
+        SONARQUBE_SCANNER_HOME = tool name: 'SonarQubeScanner'
+        MSBUILD_SCANNER_HOME = tool name: 'SonarScannerMSBuild'
     }
 
     stages {
@@ -24,7 +26,7 @@ pipeline {
             }
         }
 
-        stage('Build') {
+        stage('Build Node.js App') {
             steps {
                 bat 'npm run build'
             }
@@ -34,40 +36,17 @@ pipeline {
             steps {
                 script {
                     withSonarQubeEnv('SonarQube Test') {
-                        bat 'npm run sonarqube'
+                        bat """
+                        ${env.MSBUILD_SCANNER_HOME}/SonarScanner.MSBuild.exe begin /k:microservice_auth /d:sonar.login="${env.SONAR_TOKEN}" /d:sonar.host.url="${env.SONAR_HOST_URL}" /d:sonar.projectName="microservice_auth" /d:sonar.projectVersion="4.0" /d:sonar.sources="."
+                        msbuild your-solution.sln /t:Rebuild
+                        ${env.MSBUILD_SCANNER_HOME}/SonarScanner.MSBuild.exe end /d:sonar.login="${env.SONAR_TOKEN}"
+                        """
                     }
                 }
             }
         }
 
-        stage('Build Docker image') {
-            steps {
-                script {
-                    bat 'docker build --no-cache -t formationfrontend:latest -f Dockerfile .'
-                    bat 'docker tag formationfrontend:latest nour0/formationfrontend:latest'
-                }
-            }
-        }
-
-        stage('Deploy Docker image') {
-            steps {
-                script {
-                    withCredentials([string(credentialsId: 'docker-hub-token', variable: 'DOCKER_TOKEN')]) {
-                        docker.withRegistry('https://index.docker.io/v1/', '12') {
-                            bat "docker image push nour0/formationfrontend:latest"
-                        }
-                    }
-                }
-            }
-        }
-
-        stage('Kubernetes Deployment') {
-            steps {
-                script {
-                    bat 'kubectl apply -f auth-deployment.yaml' 
-                }
-            }
-        }
+        // Add your remaining stages here
     }
 
     post {
