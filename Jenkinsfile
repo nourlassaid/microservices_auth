@@ -35,7 +35,7 @@ stage('SonarQube Analysis') {
             steps {
                 // Exécuter l'analyse SonarQube
                 withSonarQubeEnv('sonarquabe') {
-                    bat '"C:\\Program Files\\sonar-scanner-5.0.1.3006-windows\\bin\\sonar-scanner" -Dsonar.projectKey=microservices-security'
+                    bat '"C:\Users\MSAR\Desktop\sonarqube-10.5.1.90531\bin\windows-x86-64'
                 }
             }
         }
