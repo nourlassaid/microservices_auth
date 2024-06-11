@@ -6,7 +6,8 @@
   "scripts": {
     "test": "jest",
     "start": "node app.js",
-    "sonar": "sonar-scanner"
+    "sonar": "sonar-scanner",
+    "build": "echo 'Build script executed'"
   },
   "keywords": [],
   "author": "",
