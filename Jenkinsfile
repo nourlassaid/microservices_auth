@@ -31,19 +31,16 @@ pipeline {
                 bat 'npm run build'
             }
         }
-stage('SonarQube Analysis') {
+
+        stage('SonarQube Analysis') {
             steps {
                 // Exécuter l'analyse SonarQube
                 withSonarQubeEnv('sonarquabe') {
-                    bat '"C:\Users\MSAR\Desktop\sonarqube-10.5.1.90531\bin\windows-x86-64'
+                    bat '"%SONARQUBE_SCANNER_HOME%/bin/sonar-scanner.bat"'
                 }
             }
         }
     }
-}
-
-        // Add your remaining stages here
-    
 
     post {
         success {
@@ -54,4 +51,4 @@ stage('SonarQube Analysis') {
             echo 'Build failed!'
         }
     }
-
+}
