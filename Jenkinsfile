@@ -2,18 +2,17 @@ pipeline {
     agent any
 
     environment {
-        NODEJS_HOME = tool name: 'NodeJS', type: 'jenkins.plugins.nodejs.tools.NodeJSInstallation'
-        PATH = "${env.NODEJS_HOME}/bin:${env.PATH}"
-        CHROME_BIN = '/usr/bin/google-chrome'
-        DOCKER_HUB_REGISTRY = 'docker.io'
-        SONARQUBE_SCANNER_HOME = tool name: 'SonarQubeScanner'
-        MSBUILD_SCANNER_HOME = tool name: 'SonarScannerMSBuild'
+        DOCKER_PATH = "C:\\Program Files\\Docker\\cli-plugins"
+        NODEJS_PATH = "C:\\Program Files\\nodejs"
+        PATH = "${DOCKER_PATH};${NODEJS_PATH};${env.PATH}"  // Ajout de Docker et Node.js au PATH
     }
 
     stages {
         stage('Checkout') {
             steps {
-                checkout scm
+                script {
+                    checkout scm
+                }
             }
         }
 
@@ -21,25 +20,50 @@ pipeline {
             steps {
                 script {
                     bat 'npm install'
-                    bat 'npm install node-pre-gyp'
+                    bat 'npm install @mapbox/node-pre-gyp'
                 }
             }
         }
 
-        stage('Build Node.js App') {
+        stage('Build') {
             steps {
                 bat 'npm run build'
             }
         }
 
-      
+        stage('SonarQube Analysis') {
+            steps {
+                script {
+                    withSonarQubeEnv('SonarQube Test') {
+                        bat 'npm run sonarqube'
+                    }
+                }
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    bat 'docker build -t nour0/auth:latest.'
+                }
+            }
+        }
+
+        stage('Kubernetes Deployment') {
+            steps {
+                script {
+                    withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
+                        bat 'kubectl apply -f auth-deployment.yaml --validate=false'
+                    }
+                }
+            }
+        }
     }
 
     post {
         success {
             echo 'Build succeeded!'
         }
-
         failure {
             echo 'Build failed!'
         }

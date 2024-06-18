@@ -15,9 +15,9 @@ spec:
     spec:
       containers:
         - name: backend
-          image: nour0/formationfrontend:latest # Correction apportée ici
+          image: nour0/auth:latest # Correction apportée ici
           ports:
-            - containerPort: 8333
+            - containerPort: 8200
 ---
 
 apiVersion: v1
@@ -30,6 +30,6 @@ spec:
     app: backend
   ports:
     - protocol: TCP
-      port: 8333
-      targetPort: 8333
+      port: 8200
+      targetPort: 8200
   type: LoadBalancer

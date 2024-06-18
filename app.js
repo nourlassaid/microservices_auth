@@ -10,6 +10,8 @@ const client = require('prom-client');
 const db = require('./db'); // Importez la connexion à la base de données MySQL
 
 
+
+
 // Enable Prometheus metrics collection
 const register = new client.Registry();
 client.collectDefaultMetrics({ register });
